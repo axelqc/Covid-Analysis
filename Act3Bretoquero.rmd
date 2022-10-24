@@ -1,0 +1,336 @@
+---
+title: "Act3Breto"
+author: "Sarah Dorado A01540946, Axel Quiroga Caldera A00832676, Querubín Pérez Andrés A01761022, Juan Francisco Leal Pérez de Ayala A01285829"
+date: "2022-10-12"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+leyendo los datos de la variable de defuncion e ingreso para conseguir los dias de estancia
+```{r}
+M = read.csv("RetoMuestra2.csv", encoding= "UTF-8" )
+
+```
+
+Una vez con nuestra muestra en el entorno de R Markdown, pasamos a definir una variable de tiempo de hospitalización, obtenida a partir de la diferencia entre la variable "fecha de defunción" y "fecha de ingreso"; y realizando un histograma que nos pueda dar una primera aproximación a la variable.
+
+```{r}
+Mf = subset(M, M$FECHA_DEF !="9999-99-99")
+diash = as.numeric(as.Date(Mf$FECHA_DEF)-as.Date(Mf$FECHA_INGRESO))
+hist(diash, col = cm.colors(20))
+barplot(table(diash), col = topo.colors(20), main ="Dias de hospitalizacion")
+
+
+```
+
+
+Homo todos casi todos los datos se encuentran entre 0 y 100 días, hemos decidido centrar nuestro gráfico en esta franja, observando cómo hay muy pocos pacientes que pasen más de, aproximadamente, 20 días en el hospital debido a la COVID-19, en comparación con los que pasan menos de 20, grosso modo.
+
+
+Haciendo una tabla de conteo:
+
+```{r}
+table(diash)
+```
+
+Vemos cómo, además de darse datos negativos (absurdos), dentro de los pacientes que pasan más de 20 días, muy poca gente está más de 70 días hospitalizada, por lo que decidimos centrarnos únicamente en los pacientes que han estado entre 0 y 70 días hospitalizados.
+
+```{r}
+diash1 = subset(diash, diash>-1 & diash<100)
+barplot(table(diash1), col = cm.colors(20), main ="Histograma de dias de hospitalizacion")
+```
+
+Realicemos, ahora, una descripción numérica de nuestra variable, en nuestra muestra:
+
+```{r}
+library(psych)
+
+des = describe(diash1)
+des 
+
+T = t(des)
+T
+
+length(diash1)
+```
+
+Según la muestra, los pacientes pasarían promedio de unos 8 días en el hospital, siendo muy pocos los que pasarían más de 16 días en el hospital, o sólamente 1 o ninguno.
+
+Además,
+```{r}
+sk = T[11]
+cat("Coeficiente de sesgo: ", sk)
+```
+se confirma que el sesgo es positivo, i.e., que los datos se encuentran acumulados a la derecha de la gráfica; esto es, que es muy difícil que, dado un paciente de COVID-19 hospitalizado al azar, su estancia en el hospital se alargue indefinidamente.
+
+Por otro lado, realizando un intervalo al 95% de confianza para la media poblacional,
+```{r}
+confianza=0.95 #nivel de confianza
+alfa=1-confianza #nivel de significación
+xbarra=8.3258182 #media de la muestra es estimador puntual para la media poblacional
+sigma= 8.1732928 #desviación poblacional
+n=5500 #tamaño de la muestra
+Errorestandar=sigma/sqrt(n)
+mitadalfa=alfa/2
+Zcritico=abs(qnorm(mitadalfa))
+Errorestimacion=Zcritico*Errorestandar
+LI=xbarra-Errorestimacion
+LS=xbarra+Errorestimacion
+
+
+
+```
+descubrimos que la media poblacional podría encontrarse entre 8.10 y 8.54 a un nivel de confianza del 95%, lo cual resulta bastante significativo a la hora de manejar nuestros datos y de acercarnos a nuestro problema concreto.
+leyendo los datos de la variable tiempo de hospitalización. No obstante, es esta la variable que nosotros pretendemos estudiar, sobre las demás, así que no nos condiciona a la hora de realizar una sub-variable.
+
+Vayamos ahora con la variable "edad". 
+
+```{r}
+
+hist(M$EDAD, col = cm.colors(20), main ="Histograma de edad")
+
+
+```
+El histograma parece sugerir que, padeciendo COVID-19, la franja de edad más probable a la que pertenecer es a la de personas adultas entre 20 y 60 años. 
+
+Haciendo una tabla de conteo
+
+```{r}
+table(M$EDAD)
+```
+vemos como los únicos datos que tiene sentido eliminar es a partir de los 100, cuando el número de datos resulta muy escaso.
+```{r}
+sedad = subset(M$EDAD,  M$EDAD<110)
+barplot(table(sedad), col = cm.colors(20), main ="Edades de los pacientes")
+```
+
+Ahora, realizemos un análisis numérico de nuestra muestra.
+
+```{r}
+library(psych)
+
+des = describe(sedad)
+des 
+
+T = t(des)
+T
+length(sedad)
+```
+
+Según lo extraído, deducimos que, en nuestra muestra, la media de edad de los pacientes es de unos 40 años y que los datos tienden a encontrarse entre los 23 y los 55 años.
+
+Además,
+```{r}
+sk = T[11]
+cat("Coeficiente de sesgo: ", sk)
+```
+
+ el coeficiente de sesgo es \>0, lo cual quiere decir que tiene sesgo a la derecha.
+
+
+De nuestra media muestral, podemos aventurar, para la población,
+```{r}
+confianza=0.95 #nivel de confianza
+alfa=1-confianza #nivel de significación
+xbarra= 3.987252e+01 #media de la muestra es estimador puntual para la media poblacional
+sigma=  1.686066e+01 #desviación poblacional
+n=119993 #tamaño de la muestra
+Errorestandar=sigma/sqrt(n)
+mitadalfa=alfa/2
+Zcritico=abs(qnorm(mitadalfa))
+Errorestimacion=Zcritico*Errorestandar
+LI=xbarra-Errorestimacion
+LS=xbarra+Errorestimacion
+
+
+
+```
+que la media poblacional entre 39 y 40 años a un nivel de confianza del 95%. Por lo tanto, deducimos que, a la hora de plantear nuestro análisis, tomar como sub-variable pacientes de entre 35 y 50 años está, en lo referente a la media, justicado.
+
+Vayamos, ahora, con la variable "sexo"
+
+Haciendo una tabla de conteo...
+
+```{r}
+Mf = M$SEXO
+table(M$SEXO)
+```
+... y un histograma...
+```{r}
+barplot(table(M$SEXO), col = c("mintcream", "lightskyblue4"), main ="Sexo de los pacientes", legend.text = c("1 = Masculino", "2 = Femenino"))
+```
+...descubrimos la semejanza en las proporciones, por lo que está justificado que elijamos sólo el sexo femenino. Si, por lo que fuera, se hubiera dado una diferencia muy grande, sí que tendríamos que haber tomado alguna decisión; pero como las proporciones son similares, no pasa nada por tomar partido por una u otra; AUNQUE sería interesante verificar que tal proporción puede, verdaderamente, generalizarse a la población. 
+
+```{r}
+binom.test(67380, 120000, 63780/120000, alternative = "two.sided", conf.level = 0.95)
+```
+En consecuencia, lo que obtenemos es que, al 95% de confianza, nuestra proporción de mujeres sólo varía, a lo sumo, 1 punto porcentual, por lo que tiene sentido que trabajemos sobre el grupo de mujeres.
+
+En cuanto a la entidad nacional,
+
+```{r}
+Mf = M$ENTIDAD_NAC
+table(M$ENTIDAD_NAC)
+```
+
+```{r}
+barplot(table(Mf), col = cm.colors(20), main ="Estados", xlab = "Estado", ylab = "Cantidad de pacientes")
+```
+
+Vemos que un estado sobresale sobre los demás, pero no es ninguno de los estados que vamos a estudiar (14 o 19), así que pasamos al estudio de nuestra pregunta rectora. 
+
+
+
+Vamos a comparar el tiempo de hospitalización en mujeres entre 35 y 50 años del estado de Nuevo León y Jalisco
+
+```{r}
+NL = subset(M, M$SEXO==2 & M$ENTIDAD_NAC == 19 & M$EDAD>34 & M$EDAD<51 )
+Jalisco =  subset(M, M$SEXO==2 & M$ENTIDAD_NAC == 14 & M$EDAD>34 & M$EDAD<51 )
+
+NL1 = NL[-c(752:859),]
+
+```
+
+
+Nuestro contraste de hipótesis sería: 
+
+
+Ho: Las medias son iguales para ambos estados 
+
+H1: Las medias son diferentes 
+
+Alfa: 0.05
+
+Como nuestras muestras son grandes, podemos presuponer normalidad, así que realizamos un z.test. 
+
+```{r}
+NL2 = subset(NL1, NL1$FECHA_DEF !="9999-99-99")
+Jalisco2 = subset(Jalisco, Jalisco$FECHA_DEF !="9999-99-99")
+difnl = as.numeric(as.Date(NL2$FECHA_DEF)-as.Date(NL2$FECHA_INGRESO))
+difj = as.numeric(as.Date(Jalisco2$FECHA_DEF)-as.Date(Jalisco2$FECHA_INGRESO))
+m1 = mean(difnl);
+m2 = mean(difj);
+z = qnorm(0.05/2);
+n1 = length(NL2);
+n2 = length(Jalisco2);
+sup = m1-m2 + z*sqrt(sd(difnl)^2/n1+sd(difj)^2/n2);
+inf = m1-m2 - z*sqrt(sd(difnl)^2/n1+sd(difj)^2/n2);
+```
+Así, nuestro intervalo de confianza al 95% es, truncando, [-4.52,1.93]; por lo que, podemos afirmar, al 95% de confianza, que las medias no son diferentes.
+
+¿Qué puede estar detrás de esto?
+
+¿Puede ser que se deba a que la proporción de indígenas en un estado y otro sea similar? Comprobémoslo.
+
+Al tratarse de datos pequeños, podemos hacerlo manualmente:
+
+Ho: Es la misma proporción.
+H1: Es diferente proporción.
+
+```{r}
+nA = 859  #NL
+nB = 751  #JAL
+fA = 0
+fB = 2
+alfa = 0.05
+
+pA = fA/nA
+pB = fB/nB
+Z = abs(qnorm(alfa/2))
+EE = sqrt(pA*(1-pA)/nA + pB*(1-pB)/nB)
+Linf = (pA-pB) - Z*EE
+Lsup = (pA-pB) + Z*EE
+
+cat("[", Linf, ",", Lsup,"]")
+
+```
+
+De esta forma, con una confianza del 95%, podemos afirmar que la proporción de indígenas es la misma en ambos sitios.
+
+Ahora bien, si tomamos, por ejemplo, Chiapas, un estado rural, vemos que:
+
+
+```{r}
+NL5 = subset(M, M$SEXO==2 & M$ENTIDAD_NAC == 19 & M$EDAD>34 & M$EDAD<51 )
+Ch =  subset(M, M$SEXO==2 & M$ENTIDAD_NAC == 7 & M$EDAD>34 & M$EDAD<51 )
+
+
+NL6 = NL[-c(216:859),]
+
+```
+
+
+Ho: Las medias son iguales para ambos estados 
+
+H1: Las medias son diferentes 
+
+Alfa = 0.05
+
+```{r}
+NL7 = subset(NL6, NL6$FECHA_DEF !="9999-99-99")
+Ch2 = subset(Ch, Ch$FECHA_DEF !="9999-99-99")
+difnl2 = as.numeric(as.Date(NL7$FECHA_DEF)-as.Date(NL7$FECHA_INGRESO))
+difCH = as.numeric(as.Date(Ch2$FECHA_DEF)-as.Date(Ch2$FECHA_INGRESO))
+
+m1 = mean(difnl2);
+m2 = mean(difCH);
+z = qnorm(0.05/2);
+n1 = length(NL7);
+n2 = length(Ch2);
+sup = m1-m2 + z*sqrt(sd(difnl2)^2/n1+sd(difCH)^2/n2);
+inf = m1-m2 - z*sqrt(sd(difnl2)^2/n1+sd(difCH)^2/n2);
+```
+nos sale [-6.08,-0.2], luego no hay evidencia para afirmar que las medias sean iguales.
+
+Y, además:
+
+```{r}
+nA = 859 #NL
+nB = 215 #CHI
+fA = 0
+fB = 6
+alfa = 0.05
+pA = fA/nA
+pB = fB/nB
+Z = abs(qnorm(alfa/2))
+EE = sqrt(pA*(1-pA)/nA + pB*(1-pB)/nB)
+Linf = (pA-pB) - Z*EE
+Lsup = (pA-pB) + Z*EE
+cat("[", Linf, ",", Lsup,"]")
+## [ -0.04992301 , -0.005890939 ]
+```
+
+Con una confianza del 95% tenemos que la diferencia de proporción de indígenas en Nuevo León y Chiapas es diferente de 0; i.e., que hay diferente proporción de indígenas.
+
+
+Surge, así, la pregunta: ¿es cierto que el tiempo de hospitalización dependa, realmente, del hecho de ser indígena? Si tomamos, ahora, el tiempo de intubación como medida de gravedad en la enfermedad, hagamos una prueba de independencia:
+
+
+Ho: Ser indigena y estar intubado son independientes.
+
+
+H1: Ser indigena y estar intubado no son independientes.
+
+```{r}
+
+alfa = 0.05
+M5 = subset(M, M$INDIGENA != 99 & M$INTUBADO != 99 & M$INTUBADO != 97)
+cat("Indigena\n")
+table(M5$INDIGENA)
+cat("\nIntubación")
+table(M5$INTUBADO)
+
+Ta = table(M5$INDIGENA, M5$INTUBADO)
+
+chisq.test(Ta)
+```
+
+
+Con la prueba chi^2 podemos analizar la independencia de variables categoricas. Aplicándola a nuestras variables, obtenemos un valor-p = 0.3751 > alfa = 0.05, por lo que se aprueba la hipotesis nula. En consecuencia, concluimos que el hecho de ser intubado no está condicionado por ser o no indígena.
+
+
